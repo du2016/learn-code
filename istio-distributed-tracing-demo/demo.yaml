@@ -1,0 +1,106 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demoserver
+  labels:
+    app: demoserver
+spec:
+  ports:
+  - port: 9001
+    name: http
+    protocol: TCP
+    targetPort: 9001
+  selector:
+    app: demoserver
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: demoserver-v1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: demoserver
+        version: v1
+    spec:
+      containers:
+      - args:
+        - /opt/demo-server
+        image: tomcat
+        imagePullPolicy: Always
+        name: demoserver
+        ports:
+        - containerPort: 9001
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /opt
+          name: mountpath0
+      volumes:
+      - hostPath:
+          path: /opt/
+          type: ""
+        name: mountpath0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: democlient
+  labels:
+    app: democlient
+spec:
+  ports:
+  - port: 9002
+    name: http
+    protocol: TCP
+    targetPort: 9002
+  selector:
+    app: democlient
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: democlient-v1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: democlient
+        version: v1
+    spec:
+      containers:
+      - name: demo-client
+        args:
+        - /opt/demo-client
+        - "http://demoserver:9001"
+        image: tomcat
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9002
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /opt
+          name: mountpath0
+      volumes:
+      - hostPath:
+          path: /opt/
+          type: ""
+        name: mountpath0
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gateway
+  annotations:
+    kubernetes.io/ingress.class: "istio"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: democlient
+          servicePort: 9002
+---
