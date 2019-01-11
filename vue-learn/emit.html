@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+</head>
+<body>
+    <div id="app">
+        <label>{{count}}</label>
+        <my-component @counter="echo" @click.native="necho">+</my-component>
+    </div>
+</body>
+<script>
+    Vue.component('my-component',{
+        template: '<button @click="counter">',
+        methods:{
+           counter: function () {
+               this.count++;
+               this.$emit("counter",this.count)
+           }
+        },
+        data:function () {
+            return {
+                count:0
+            }
+        }
+    })
+    var app=new Vue({
+        el: "#app",
+        data:{
+            count:0
+        },
+        methods:{
+            echo: function (count) {
+                this.count=count
+            },
+            necho:function () {
+                console.log("hellowrold")
+            }
+        },
+
+    })
+</script>
+</html>
