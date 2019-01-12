@@ -7,7 +7,6 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
-	"os"
 )
 
 const (

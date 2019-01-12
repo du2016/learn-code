@@ -20,8 +20,8 @@ docker run -d --name jaeger \
 
 # set env
 
-14268 is the port to accept jaeger.thrift directly from clients
 
 ```
+# 14268 is the port to accept jaeger.thrift directly from clients
 export JAEGER_ENDPOINT="http://127.0.0.1:14268/api/traces"
 ```
