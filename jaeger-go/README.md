@@ -1,7 +1,5 @@
 # jaeger tracer demo 
 
-reference [tracing-examples](https://github.com/signalfx/tracing-examples)
-
 
 # start jaeger
 
