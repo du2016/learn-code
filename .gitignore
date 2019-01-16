@@ -1,2 +1,6 @@
 
 \.idea/
+
+webpacklearn/node_modules/
+
+webpacklearn/dist/
