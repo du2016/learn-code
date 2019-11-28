@@ -1,47 +1,48 @@
 package main
 
 import (
-	"net/http"
-	"log"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/uber/jaeger-client-go/config"
+	"log"
+	"net/http"
 )
 
-func main(){
-	http.HandleFunc("/",test)
-	http.ListenAndServe(":8000",nil)
+func main() {
+	http.HandleFunc("/", test)
+	http.ListenAndServe(":8000", nil)
 }
 
-func test(w http.ResponseWriter,r *http.Request){
-	log.Println(r.Header,r.URL)
+func test(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.Header, r.URL)
 
-	cfg,err:=config.FromEnv()
-	if err!=nil {
+	cfg, err := config.FromEnv()
+	if err != nil {
 		log.Println(err)
 	}
-	cfg.ServiceName="formatter"
-	cfg.Sampler=&config.SamplerConfig{
+	cfg.ServiceName = "svc2"
+	cfg.Sampler = &config.SamplerConfig{
 		Type:  "const",
 		Param: 1,
 	}
-	tracer,closer,err:=cfg.NewTracer()
-	if err!=nil {
+	tracer, closer, err := cfg.NewTracer()
+	if err != nil {
 		log.Println(err)
 	}
 	defer closer.Close()
 
 	spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	span := tracer.StartSpan("format", ext.RPCServerOption(spanCtx))
+	span := tracer.StartSpan("get haha", ext.RPCServerOption(spanCtx))
 	defer span.Finish()
-	//hehe:=span.BaggageItem("haha")
 	log.Println(span.BaggageItem("haha"))
 
 	span.LogFields(
 		otlog.String("event", "string-format"),
 		otlog.String("value", "hello wrold"),
 	)
-
+	span.LogFields(
+		otlog.String("hello", "world"),
+	)
 	w.Write([]byte("hello wrold"))
 }

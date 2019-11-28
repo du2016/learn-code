@@ -1,17 +1,18 @@
 package main
 
 import (
-	jaegercfg "github.com/uber/jaeger-client-go/config"
-	"log"
 	"github.com/opentracing/opentracing-go"
 	tracelog "github.com/opentracing/opentracing-go/log"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	"log"
 )
-func main(){
-	cfg,err:=jaegercfg.FromEnv()
-	if err!=nil {
+
+func main() {
+	cfg, err := jaegercfg.FromEnv()
+	if err != nil {
 		log.Println(err)
 	}
-	cfg.Sampler=&jaegercfg.SamplerConfig{
+	cfg.Sampler = &jaegercfg.SamplerConfig{
 		Type:  "const",
 		Param: 1,
 	}
@@ -21,15 +22,15 @@ func main(){
 		log.Println(err)
 	}
 	defer closer.Close()
-	opentracing.SetGlobalTracer(tracer)
+	//opentracing.SetGlobalTracer(tracer)
 
-	parentSpan:=tracer.StartSpan("root")
+	parentSpan := tracer.StartSpan("root")
 	defer parentSpan.Finish()
 	parentSpan.LogFields(
-		tracelog.String("hello","world"),
+		tracelog.String("hello", "world"),
 	)
-	parentSpan.LogKV("foo","bar")
+	parentSpan.LogKV("foo", "bar")
 
-	childspan:=tracer.StartSpan("child span",opentracing.ChildOf(parentSpan.Context()))
+	childspan := tracer.StartSpan("child span", opentracing.ChildOf(parentSpan.Context()))
 	defer childspan.Finish()
 }
