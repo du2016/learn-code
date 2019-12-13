@@ -2,31 +2,32 @@ package main
 
 import (
 	"flag"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	"fmt"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/runtime"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/cache"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/util/workqueue"
-	"time"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"fmt"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"log"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/workqueue"
+	"log"
+	"time"
 )
-func init(){
+
+func init() {
 	log.SetFlags(log.Lshortfile)
 }
-func main(){
+func main() {
 	kubeconfig := flag.String("kubeconfig", "./kubeconfig", "Path to a kube config. Only required if out-of-cluster.")
 	flag.Parse()
-	pic:=newPodipcontroller(*kubeconfig)
+	pic := newPodipcontroller(*kubeconfig)
 	var stopCh <-chan struct{}
 	pic.Run(2, stopCh)
 }
@@ -38,8 +39,8 @@ type Podipcontroller struct {
 	podStore cache.Store
 	//cache.AppendFunc
 	podController cache.Controller
-	podtoip        *PodToIp
-	podsQueue      workqueue.RateLimitingInterface
+	podtoip       *PodToIp
+	podsQueue     workqueue.RateLimitingInterface
 }
 
 func (slm *Podipcontroller) Run(workers int, stopCh <-chan struct{}) {
@@ -72,7 +73,7 @@ func (slm *Podipcontroller) podWorker() {
 		defer slm.podsQueue.Done(key)
 		slm.podStore.Resync()
 		obj, exists, err := slm.podStore.GetByKey(key.(string))
-		log.Printf("%#v",obj)
+		log.Printf("%#v", obj)
 		if !exists {
 			fmt.Printf("Pod has been deleted %v\n", key)
 			return false
@@ -82,17 +83,17 @@ func (slm *Podipcontroller) podWorker() {
 			return false
 		}
 		pod := obj.(*v1.Pod)
-		if pod.DeletionTimestamp!=nil{
-			log.Println(slm.crdclient.Delete(pod.Name,pod.Namespace))
+		if pod.DeletionTimestamp != nil {
+			log.Println(slm.crdclient.Delete(pod.Name, pod.Namespace))
 			return false
 		}
 		log.Println(slm.crdclient.Create(&PodToIp{
 			Metadata: metav1.ObjectMeta{
-				Name: pod.ObjectMeta.Name,
+				Name:      pod.ObjectMeta.Name,
 				Namespace: pod.Namespace,
 			},
-			PodName:     pod.ObjectMeta.Name,
-			PodAddress:  pod.Status.PodIP,
+			PodName:    pod.ObjectMeta.Name,
+			PodAddress: pod.Status.PodIP,
 		}))
 		return false
 	}
@@ -103,19 +104,19 @@ func (slm *Podipcontroller) podWorker() {
 		}
 	}
 }
-func newPodipcontroller(kubeconfig string) *Podipcontroller{
-	slm:=&Podipcontroller{
-		kubeClient:getClientsetOrDie(kubeconfig),
-		crdclient: getCRDClientOrDie(kubeconfig),
+func newPodipcontroller(kubeconfig string) *Podipcontroller {
+	slm := &Podipcontroller{
+		kubeClient: getClientsetOrDie(kubeconfig),
+		crdclient:  getCRDClientOrDie(kubeconfig),
 		podsQueue:  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "pods"),
 	}
-	watchList:=cache.NewListWatchFromClient(slm.kubeClient.CoreV1().RESTClient(),"pods",v1.NamespaceAll,fields.Everything())
-	slm.podStore,slm.podController=cache.NewInformer(
+	watchList := cache.NewListWatchFromClient(slm.kubeClient.CoreV1().RESTClient(), "pods", v1.NamespaceAll, fields.Everything())
+	slm.podStore, slm.podController = cache.NewInformer(
 		watchList,
 		&v1.Pod{},
 		time.Second*30,
 		cache.ResourceEventHandlerFuncs{
-			AddFunc: slm.enqueuePod,
+			AddFunc:    slm.enqueuePod,
 			UpdateFunc: slm.updatePod,
 		},
 	)
@@ -149,9 +150,10 @@ type PodToIp struct {
 	metav1.TypeMeta `json:",inline"`
 	Metadata        metav1.ObjectMeta `json:"metadata"`
 
-	PodName     string    `json:"podName"`
-	PodAddress  string    `json:"podAddress"`
+	PodName    string `json:"podName"`
+	PodAddress string `json:"podAddress"`
 }
+
 func getClientsetOrDie(kubeconfig string) *kubernetes.Clientset {
 	// Create the client config. Use kubeconfig if given, otherwise assume in-cluster.
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -166,7 +168,6 @@ func getClientsetOrDie(kubeconfig string) *kubernetes.Clientset {
 	//clientset.CoreV1().Pods("111").Get("",nil)
 	return clientset
 }
-
 
 func (c *Podipclient) Create(body *PodToIp) (*PodToIp, error) {
 	var ret PodToIp
@@ -189,7 +190,7 @@ func (c *Podipclient) Update(body *PodToIp) (*PodToIp, error) {
 	return &ret, err
 }
 
-func (c *Podipclient) Get(name string,namespace string) (*PodToIp, error) {
+func (c *Podipclient) Get(name string, namespace string) (*PodToIp, error) {
 	var ret PodToIp
 	err := c.rest.Get().
 		Resource("podtoips").
@@ -199,7 +200,7 @@ func (c *Podipclient) Get(name string,namespace string) (*PodToIp, error) {
 	return &ret, err
 }
 
-func (c *Podipclient) Delete(name string,namespace string) (*PodToIp, error) {
+func (c *Podipclient) Delete(name string, namespace string) (*PodToIp, error) {
 	var ret PodToIp
 	err := c.rest.Delete().
 		Resource("podtoips").
@@ -255,7 +256,6 @@ type PodToIpList struct {
 	Items []PodToIp `json:"items"`
 }
 
-
 func (in *PodToIp) DeepCopy() *PodToIp {
 	if in == nil {
 		return nil
@@ -279,7 +279,6 @@ func (in *PodToIp) DeepCopyInto(out *PodToIp) {
 	*out = *in
 	return
 }
-
 
 func (in *PodToIpList) DeepCopy() *PodToIpList {
 	if in == nil {

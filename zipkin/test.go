@@ -81,7 +81,7 @@ func main() {
 	res.Body.Close()
 
 	// Output:
-	time.Sleep(5*time.Second)
+	time.Sleep(5 * time.Second)
 }
 
 func someFunc(client *zipkinhttp.Client, url string) http.HandlerFunc {

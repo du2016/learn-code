@@ -8,8 +8,8 @@ import (
 func main() {
 	a := []int{2, 1, 3, 4, 6, 5, 7, 10}
 	//shellsort(a)
-	aux:=make([]int,len(a))
-	mergesort(a,aux,0,3,len(a))
+	aux := make([]int, len(a))
+	mergesort(a, aux, 0, 3, len(a))
 	log.Println(a)
 }
 
@@ -67,19 +67,19 @@ func binarysearch(a []int, k int) int {
 	return -1
 }
 
-func shellsort(a []int){
-	N:=len(a)
-	h:=1
-	for (h<N/3){
-		h=3*h+1
+func shellsort(a []int) {
+	N := len(a)
+	h := 1
+	for h < N/3 {
+		h = 3*h + 1
 	}
-	for h>=1{
-		for i:=h;i<N;i++{
-			for j:=i;j>=h && a[j]<a[j-h];j-=h{
-				a[j],a[j-h]=a[j-h],a[j]
+	for h >= 1 {
+		for i := h; i < N; i++ {
+			for j := i; j >= h && a[j] < a[j-h]; j -= h {
+				a[j], a[j-h] = a[j-h], a[j]
 			}
 		}
-		h=h/3
+		h = h / 3
 	}
 }
 
@@ -105,7 +105,7 @@ func Quick2Sort(values []int) {
 	Quick2Sort(values[head+1:])
 }
 
-func mergesort(s,aux []int, lo, mid, hi int) {
+func mergesort(s, aux []int, lo, mid, hi int) {
 	for k := lo; k <= hi; k++ {
 		aux[k] = s[k]
 	}

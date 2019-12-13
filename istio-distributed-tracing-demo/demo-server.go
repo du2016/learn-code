@@ -1,17 +1,18 @@
 package main
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 )
 
-func main(){
-	http.HandleFunc("/",echohandler)
-	err:=http.ListenAndServe(":9001",nil)
-	if err!=nil {
+func main() {
+	http.HandleFunc("/", echohandler)
+	err := http.ListenAndServe(":9001", nil)
+	if err != nil {
 		log.Println(err)
 	}
 }
+
 var headersToCopy = []string{
 	"x-request-id",
 	"x-b3-traceid",
@@ -22,9 +23,9 @@ var headersToCopy = []string{
 	"x-ot-span-context",
 }
 
-func echohandler(w http.ResponseWriter,r *http.Request){
-	for _,h:=range headersToCopy{
-		log.Println(h,"  :",r.Header.Get(h))
+func echohandler(w http.ResponseWriter, r *http.Request) {
+	for _, h := range headersToCopy {
+		log.Println(h, "  :", r.Header.Get(h))
 	}
 	w.Write([]byte("hellow"))
 }

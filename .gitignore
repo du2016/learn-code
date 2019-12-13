@@ -4,3 +4,5 @@
 webpacklearn/node_modules/
 
 webpacklearn/dist/
+
+*vendor

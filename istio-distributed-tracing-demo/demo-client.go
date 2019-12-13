@@ -1,20 +1,19 @@
 package main
 
 import (
-	"net/http"
-	"log"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 )
 
 var target string
 
-
-func main(){
-	target=os.Args[1]
-	http.HandleFunc("/",gethandler)
-	err:=http.ListenAndServe(":9002",nil)
-	if err!=nil {
+func main() {
+	target = os.Args[1]
+	http.HandleFunc("/", gethandler)
+	err := http.ListenAndServe(":9002", nil)
+	if err != nil {
 		log.Println(err)
 	}
 }
@@ -29,28 +28,28 @@ var headersToCopy = []string{
 	"x-ot-span-context",
 }
 
-func gethandler(w http.ResponseWriter,r *http.Request){
+func gethandler(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
-	req,err:=http.NewRequest("GET",target,nil)
-	for _,h:=range headersToCopy{
-		log.Println(h,"  :",r.Header.Get(h))
+	req, err := http.NewRequest("GET", target, nil)
+	for _, h := range headersToCopy {
+		log.Println(h, "  :", r.Header.Get(h))
 		val := r.Header.Get(h)
 		if val != "" {
 			req.Header.Set(h, val)
 		}
 	}
 	log.Println(req.Header)
-	if user_cookie:=r.Header.Get("user");user_cookie!=""{
-		req.Header.Set("Cookie","user=" + user_cookie)
+	if user_cookie := r.Header.Get("user"); user_cookie != "" {
+		req.Header.Set("Cookie", "user="+user_cookie)
 	}
-	resp,err:=client.Do(req)
-	if err!=nil {
+	resp, err := client.Do(req)
+	if err != nil {
 		log.Println(err)
 		w.Write(nil)
 		return
 	}
-	result,err:=ioutil.ReadAll(resp.Body)
-	if err!=nil {
+	result, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
 		log.Println(err)
 		w.Write(nil)
 		return

@@ -33,8 +33,8 @@ func main() {
 		log.Fatal("Please specify '-actor server' or '-actor client'")
 	}
 
-	transport,err:=jaeger.NewUDPTransport("127.0.0.1:6831",65000)
-	if err!=nil {
+	transport, err := jaeger.NewUDPTransport("127.0.0.1:6831", 65000)
+	if err != nil {
 		log.Println(err)
 	}
 
