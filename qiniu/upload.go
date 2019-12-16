@@ -16,7 +16,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"time"
 
 	"github.com/qiniu/api.v7/v7/auth"
@@ -31,18 +30,11 @@ var (
 	downUrl   string
 )
 
-func main() {
+func downloadAndUpload(urlname string, filename string) {
 	log.SetFlags(log.Lshortfile | log.Ltime)
 	if len(os.Args) < 1 {
 		panic("no parm")
 	}
-	urlname := os.Args[1]
-
-	uri, err := url.ParseRequestURI(urlname)
-	if err != nil {
-		panic(err)
-	}
-	filename := path.Base(uri.Path)
 
 	dclient := http.Client{}
 
@@ -105,5 +97,5 @@ func upload(file string, filename string, client http.Client) {
 		return
 	}
 
-	fmt.Printf("upload %s success \n", ret.Key)
+	log.Printf("upload %s success \n", ret.Key)
 }
