@@ -10,6 +10,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/canhlinh/svg2png"
 	"io"
 	"io/ioutil"
 	"log"
@@ -30,42 +31,52 @@ var (
 	downUrl   string
 )
 
-func downloadAndUpload(urlname string, filename string) {
+func downloadAndUpload(urlname string, filename string, issvg bool) {
 	log.SetFlags(log.Lshortfile | log.Ltime)
+
+	tmpfile, err := ioutil.TempFile("", "*.png")
+	if err != nil {
+		panic(err)
+	}
+
 	if len(os.Args) < 1 {
 		panic("no parm")
 	}
 
-	dclient := http.Client{}
+	if !issvg {
+		f, err := os.OpenFile(tmpfile.Name(), os.O_RDWR|os.O_CREATE, 0644)
+		dclient := http.Client{}
 
-	if proxyURL != "" {
-		proxyURI, _ := url.Parse(proxyURL)
-		dclient.Transport = &http.Transport{
-			Proxy: http.ProxyURL(proxyURI),
+		if proxyURL != "" {
+			proxyURI, _ := url.Parse(proxyURL)
+			dclient.Transport = &http.Transport{
+				Proxy: http.ProxyURL(proxyURI),
+			}
+		}
+
+		req, err := http.NewRequest("GET", urlname, nil)
+		if err != nil {
+			panic(err)
+		}
+
+		resp, err := dclient.Do(req)
+		if err != nil {
+			log.Print(err)
+		}
+
+		_, err = io.Copy(f, resp.Body)
+		if err != nil {
+			log.Println(err)
+		}
+	} else {
+		chrome := svg2png.NewChrome().SetHeight(600).SetWith(600)
+		log.Println(tmpfile.Name(), "---", filename)
+		if err := chrome.Screenshoot(urlname, tmpfile.Name()); err != nil {
+			panic(err)
 		}
 	}
-
-	req, err := http.NewRequest("GET", urlname, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	resp, err := dclient.Do(req)
-	if err != nil {
-		log.Print(err)
-	}
-
-	tmpfile, err := ioutil.TempFile("", "tmpfile")
-	if err != nil {
-		panic(err)
-	}
-
-	f, err := os.OpenFile(tmpfile.Name(), os.O_RDWR|os.O_CREATE, 0644)
-	_, err = io.Copy(f, resp.Body)
-	if err != nil {
-		log.Println(err)
-	}
 	client := http.Client{}
+
 	upload(tmpfile.Name(), filename, client)
 	os.Remove(tmpfile.Name())
 }
