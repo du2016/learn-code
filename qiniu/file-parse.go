@@ -35,9 +35,23 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	f.Close()
 	res := parseFile(string(content))
 
-	_, err = f.WriteAt([]byte(res), 0)
+
+	f1, err := os.OpenFile(os.Args[1], os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+
+	res=res+`
+
+扫描关注我:
+
+![微信](http://img.rocdu.top/20200527/qrcode_for_gh_7457c3b1bfab_258.jpg)
+`
+
+	_, err = f1.WriteAt([]byte(res), 0)
 	if err != nil {
 		log.Println(err)
 	}
